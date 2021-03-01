@@ -32,19 +32,143 @@ The research questions you have to answer are the following:
 
 ## First part
 
+### Setup packages
+```{r}
+pacman::p_load(brms, tidyverse)
+```
+
+
+
 Q1.1) Does schizophrenia involve altercentric intrusion? Define model and priors. Test the implications of your priors (prior predictive checks) and if needed adjust them. Run the model. Test the quality of the fitted model (posterior predictive checks, prior-posterior updates). Assess the evidence in favor of an increased altercentric intrusion in schizophrenia. Report the model and the results, including plots.
 
 ```{r}
+dat <- read_csv("data.csv") %>% 
+  mutate(Diagnosis = as.factor(Diagnosis)) %>% 
+  mutate(across(where(is.numeric), rethinking::normalize))
+
+
+
+## Distribution of the outcome conditioned on the predictors
+AC_f1 <- bf(AltercentricIntrusion ~ 1 + Diagnosis)
+
+# Getting priors  
+get_prior(
+  AC_f1,
+  dat,
+  family=gaussian
+)
+
+# Operationalizing priors
+AC_p1 <- c(
+  prior(normal(0.5, 0.25), class = Intercept),
+  prior(normal(0.2, 0.25), class = sigma),
+  prior(normal(0, 0.5), class = b, coef = Diagnosis1)
+)
+
+AC_m1_prior <- brm(
+  formula = AC_f1,
+  data = dat,
+  family = gaussian,
+  prior = AC_p1,
+  sample_prior="only",
+  #file = "CB_m1_prior",
+#  backend="cmdstanr"
+  #threads = threading(4)
+)
+
+p3 <- pp_check(AC_m1_prior, nsamples=100)
+p3
+
+AC_m1_v2 <- brm(
+  formula = AC_f1,
+  data = dat,
+  family = gaussian,
+  prior = AC_p1,
+  sample_prior=T,##,
+  backend="cmdstanr",
+  threads = threading(2)
+)
+
+p4<- pp_check(AC_m1_v2, nsamples=100)
+p4
+
+rethinking::dens(dat$AltercentricIntrusion)
+
+posterior <- posterior_samples(AC_m1_v2)
+
+ggplot(posterior) +
+  theme_classic() +
+  geom_density(aes(prior_Intercept), fill="red", alpha=0.3) +
+  geom_density(aes(b_Intercept), fill="blue", alpha=0.5)
+
+
+ggplot(posterior) +
+  theme_classic() +
+  geom_density(aes(prior_b_Diagnosis1), fill="red", alpha=0.3) +
+  geom_density(aes(b_Diagnosis1), fill="blue", alpha=0.5)
+
+conditional_effects(AC_m1_v2)
+plot(conditional_effects(AC_m1_v2), points=T)
+plot(conditional_effects(AC_m1_v2, spaghetti=T, nsamples=100, method = "fitted"), points=T)
+
+hypothesis(AC_m1_v2, "Diagnosis1 > 0")
+
+plot(conditional_effects(AC_m1_v2, spaghetti=T, nsamples=100, method = "predict"), points=T)
 
 ```
 
 
 Q1.2) Is altercentric intrusion related to specific symptoms *in the patients*? Identify which of the symptoms could be relevant (given their description above). Should you include more than one symptom? Build models, priors, predictive checks. Assess the evidence and report models and results, including plots. Discuss whether the results make sense.
 
-
 ```{r}
+new_dat <- dat %>% 
+  filter(Diagnosis == "1")
 
+
+multi_f <- bf(AltercentricIntrusion ~ 1 + VoiceHearing + MindReading)
+
+get_prior(multi_f, 
+          new_dat)
+
+multi_p1 <- c(
+  prior(normal(0.5, 0.25), class = Intercept),
+  prior(normal(0.2, 0.25), class = sigma),
+  prior(normal(0, 0.5), class = b, coef = MindReading), 
+  prior(normal(0, 0.5), class = b, coef = VoiceHearing)
+)
+
+multi_m1_v1 <- brm(
+  formula = multi_f,
+  data = new_dat,
+  family = gaussian,
+  prior = multi_p1,
+  sample_prior="only",##,
+  backend="cmdstanr",
+  threads = threading(4)
+)
+
+pp_check(multi_m1_v1)
+
+multi_m1_v2 <- brm(
+  formula = multi_f,
+  data = dat,
+  family = gaussian,
+  prior = multi_p1,
+  sample_prior=T,##,
+  backend="cmdstanr",
+  threads = threading(4)
+)
+
+pp_check(multi_m1_v2)
+
+posterior_samples(multi_m1_v2)
+
+conditional_effects(multi_m1_v2)
+
+hypothesis(multi_m1_v2, "MindReading > 0")
 ```
+
+
 
 
 ## Second part
