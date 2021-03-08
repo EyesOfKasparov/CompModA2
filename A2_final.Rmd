@@ -1,6 +1,6 @@
 ---
 title: "Assignment 2 - Causal inference"
-author: "RF"
+author: "Eyes of Kasparov"
 date: "2/5/2020"
 output: html_document
 ---
