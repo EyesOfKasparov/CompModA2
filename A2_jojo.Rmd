@@ -187,6 +187,8 @@ schizo_dag <- dagitty("dag {
     VoiceHearing -> Diagnosis
 }")
 
+graphLayout(schizo_dag) %>% plot
+
 dagitty::impliedConditionalIndependencies(schizo_dag)
 
 dagitty::adjustmentSets(schizo_dag, exposure="VoiceHearing", outcome = "AltercentricIntrusion")
@@ -194,6 +196,8 @@ dagitty::adjustmentSets(schizo_dag, exposure="VoiceHearing", outcome = "Altercen
 # Dope shit it works out
 summary(lm(AltercentricIntrusion ~ VoiceHearing + MindReading + Apathy, data = dat))
 summary(lm(AltercentricIntrusion ~ VoiceHearing + MindReading + Diagnosis, data = dat))
+
+
 ```
 
 Q2.2.) Redesign your analysis following the graph and report how the results change
