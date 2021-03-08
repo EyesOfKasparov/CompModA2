@@ -43,7 +43,8 @@ Q1.1) Does schizophrenia involve altercentric intrusion? Define model and priors
 
 ```{r}
 dat <- read_csv("data.csv") %>% 
-  mutate(Diagnosis = as.factor(Diagnosis)) %>% 
+  mutate(Diagnosis = as_factor(Diagnosis), 
+         ID = as_factor(ID)) %>% 
   mutate(across(where(is.numeric), rethinking::normalize))
 
 
