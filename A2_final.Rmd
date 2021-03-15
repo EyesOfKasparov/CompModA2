@@ -73,23 +73,15 @@ AC_m1_prior <- brm(
   prior = AC_p1,
   sample_prior="only",
   #file = "CB_m1_prior",
-#  backend="cmdstanr"
-  #threads = threading(4)
+  backend="cmdstanr",
+  threads = threading(4)
 )
 
 p3 <- pp_check(AC_m1_prior, nsamples=100)
 p3
 
-AC_m1_v2 <- brm(
-  formula = AC_f1,
-  data = dat,
-  family = gaussian,
-  prior = AC_p1,
-  sample_prior=T,##,
-  backend="cmdstanr",
-  threads = threading(2)
-)
-
+AC_m1_v2 <- update(AC_m1_prior, sample_prior=T) 
+  
 p4<- pp_check(AC_m1_v2, nsamples=100)
 p4
 
@@ -138,27 +130,12 @@ multi_p1 <- c(
   prior(normal(0, 0.5), class = b, coef = VoiceHearing)
 )
 
-multi_m1_v1 <- brm(
-  formula = multi_f,
-  data = new_dat,
-  family = gaussian,
-  prior = multi_p1,
-  sample_prior="only",##,
-  backend="cmdstanr",
-  threads = threading(4)
-)
+multi_m1_v1 <- update(AC_m1_prior, formula = multi_f, newdata=new_dat, prior = multi_p1)
+
 
 pp_check(multi_m1_v1)
 
-multi_m1_v2 <- brm(
-  formula = multi_f,
-  data = dat,
-  family = gaussian,
-  prior = multi_p1,
-  sample_prior=T,##,
-  backend="cmdstanr",
-  threads = threading(4)
-)
+multi_m1_v2 <- update(multi_m1_v1, sample_prior=T) 
 
 pp_check(multi_m1_v2)
 
@@ -227,27 +204,11 @@ cond_effects
 
 Q2.2.) Redesign your analysis following the graph and report how the results change
 ```{r}
-multi_m2_v1 <- brm(
-  formula = multi_f,
-  data = dat,
-  family = gaussian,
-  prior = multi_p1,
-  sample_prior="only",##,
-  backend="cmdstanr",
-  threads = threading(4)
-)
+multi_m2_v1 <- update(multi_m1_v1, newdata = dat) 
 
 pp_check(multi_m2_v1)
 
-multi_m2_v2 <- brm(
-  formula = multi_f,
-  data = dat,
-  family = gaussian,
-  prior = multi_p1,
-  sample_prior=TRUE,##,
-  backend="cmdstanr",
-  threads = threading(4)
-)
+multi_m2_v2 <- update(multi_m1_v2, newdata = dat) 
 
 pp_check(multi_m2_v2)
 
